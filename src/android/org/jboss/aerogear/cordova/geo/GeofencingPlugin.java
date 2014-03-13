@@ -53,30 +53,37 @@ public class GeofencingPlugin extends CordovaPlugin {
 
     @Override
     public void onServiceConnected(ComponentName className, IBinder service) {
+      Log.d(TAG, "GeofencePlugin: onServiceConnected called ") ; 
       GeofencingService.LocalBinder binder = (GeofencingService.LocalBinder) service;
       GeofencingPlugin.this.service = binder.getService();
     }
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
+
+       Log.d(TAG, "onServiceDisconnected called" ) ;
+
     }
   };
 
   @Override
   public void onNewIntent(Intent intent) {
+    Log.d(TAG, "onNewintent called" ) ;
     fireRegionChangedEvent(intent);
   }
 
   @Override
   public void initialize(CordovaInterface cordova, CordovaWebView webView) {
     super.initialize(cordova, webView);
-
+    Log.d(TAG, "initialize called" ) ;
     Intent intent = new Intent(cordova.getActivity(), GeofencingService.class);
     cordova.getActivity().bindService(intent, connection, Context.BIND_AUTO_CREATE);
+    Log.d(TAG, "binding service..." ) ;
   }
 
   @Override
   public void onDestroy() {
+    Log.d(TAG, "onDestroy called: unbinding service") ; 
     cordova.getActivity().unbindService(connection);
   }
 
@@ -120,7 +127,7 @@ public class GeofencingPlugin extends CordovaPlugin {
       PrintWriter err = new PrintWriter(writer);
       e.printStackTrace(err);
       Log.e(TAG, writer.toString());
-      callbackContext.error(e.getMessage());
+      callbackContext.error("Error executing geofence command: " +  e.getMessage());
     }
 
     return false;
