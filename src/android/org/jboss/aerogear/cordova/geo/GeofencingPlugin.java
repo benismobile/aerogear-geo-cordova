@@ -53,7 +53,7 @@ public class GeofencingPlugin extends CordovaPlugin {
 
     @Override
     public void onServiceConnected(ComponentName className, IBinder service) {
-      Log.d(TAG, "GeofencePlugin: onServiceConnected called ") ; 
+      Log.d(TAG, "GeofencePlugin: onServiceConnected called for service:" + service) ; 
       GeofencingService.LocalBinder binder = (GeofencingService.LocalBinder) service;
       GeofencingPlugin.this.service = binder.getService();
     }
@@ -61,7 +61,7 @@ public class GeofencingPlugin extends CordovaPlugin {
     @Override
     public void onServiceDisconnected(ComponentName name) {
 
-       Log.d(TAG, "onServiceDisconnected called" ) ;
+       Log.d(TAG, "onServiceDisconnected called for component:" + name ) ;
 
     }
   };
@@ -78,7 +78,7 @@ public class GeofencingPlugin extends CordovaPlugin {
     Log.d(TAG, "initialize called" ) ;
     Intent intent = new Intent(cordova.getActivity(), GeofencingService.class);
     cordova.getActivity().bindService(intent, connection, Context.BIND_AUTO_CREATE);
-    Log.d(TAG, "binding service..." ) ;
+    Log.d(TAG, "binding service called..." ) ;
   }
 
   @Override
@@ -90,6 +90,14 @@ public class GeofencingPlugin extends CordovaPlugin {
   @Override
   public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
     try {
+
+      if(service == null)
+      {
+
+           Log.e(TAG, "Cannot execute action: " + action + " as service not intialised yet") ;
+           callbackContext.error("Error executing geofence command no service ");
+           return false ;
+      }
       if ("register".equals(action)) {
         gWebView = this.webView;
         JSONObject params = parseParameters(data);
@@ -107,7 +115,8 @@ public class GeofencingPlugin extends CordovaPlugin {
         JSONObject params = parseParameters(data);
         String id = params.getString("fid");
         Log.d(TAG, "adding region " + id);
-        service.addRegion(id, params.getDouble("latitude"), params.getDouble("longitude"),
+        
+     service.addRegion(id, params.getDouble("latitude"), params.getDouble("longitude"),
             (float) params.getInt("radius"));
         callbackContext.success();
         return true;
@@ -135,7 +144,9 @@ public class GeofencingPlugin extends CordovaPlugin {
 
   @Override
   public void onPause(boolean multitasking) {
+
     super.onPause(multitasking);
+    Log.d(TAG, "onPause() called" ) ;
     foreground = false;
   }
 
@@ -143,6 +154,7 @@ public class GeofencingPlugin extends CordovaPlugin {
   public void onResume(boolean multitasking) {
     super.onResume(multitasking);
     foreground = true;
+    Log.d(TAG, "onResume()" ) ;
   }
 
   void fireRegionChangedEvent(final Intent intent) {
