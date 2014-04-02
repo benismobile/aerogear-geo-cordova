@@ -23,6 +23,9 @@
 @synthesize callbackId;
 @synthesize message;
 @synthesize locationManager;
+@synthesize monitoringRegions;
+@synthesize insideRegions;
+
 
 - (CDVPlugin*)initWithWebView:(UIWebView*)theWebView {
     self = (GeofencingPlugin*)[super initWithWebView:(UIWebView*)theWebView];
@@ -32,7 +35,41 @@
     }
 
     [self.locationManager startUpdatingLocation];
+      // Set location accuracy levels
+    [locationManager setDesiredAccuracy:kCLLocationAccuracyBest];
+
+    self.monitoringRegions = [[NSMutableSet alloc]init];
+    self.insideRegions = [[NSMutableSet alloc] init];
     return self;
+}
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation{
+    
+    NSLog(@"NEW LOCATION lat %f lon %f ", newLocation.coordinate.latitude, newLocation.coordinate.longitude);
+    NSLog(@"OLD LOCATION lat %f lon %f ", oldLocation.coordinate.latitude, oldLocation.coordinate.longitude);
+    
+    CLLocation *aUserLocation = newLocation;
+
+    //TODO Place in synchronized block
+    for (CLRegion *region in  self.monitoringRegions) {
+        if([region containsCoordinate:aUserLocation.coordinate]){
+            
+            if (![self.insideRegions containsObject:region]) {
+                [self.insideRegions addObject:region];
+                [self notify:region withStatus:@"entered Murrays Code"];
+            }
+        } else {
+            
+            if ([self.insideRegions containsObject:region]) {
+                [self.insideRegions removeObject:region];
+                [self notify:region withStatus:@"leaving Murrays Code"];
+            }
+        
+        }
+        
+    }
+
+
 }
 
 - (void)register:(CDVInvokedUrlCommand *)command {
@@ -57,8 +94,9 @@
 
     CLLocationCoordinate2D coordinate2D = CLLocationCoordinate2DMake([latitude doubleValue], [longitude doubleValue]);
     CLRegion * region = [[CLRegion alloc] initCircularRegionWithCenter:coordinate2D radius:radius identifier:[NSString stringWithFormat:@"cordovaGeofencing:%@", regionId]];
-
-    [self.locationManager startMonitoringForRegion:region];
+    
+    [self.monitoringRegions addObject:region];
+    [self.locationManager startMonitoringForRegion:region desiredAccuracy:kCLLocationAccuracyBest];
     [self returnStatusOk:command];
 }
 
@@ -67,7 +105,7 @@
 
     for (CLRegion *region in [locationManager monitoredRegions]) {
         if ([region.identifier hasSuffix:regionId]) {
-            [locationManager stopMonitoringForRegion:region];
+            [locationManager stopMonitoringForRegion:region ];
         }
     }
 
