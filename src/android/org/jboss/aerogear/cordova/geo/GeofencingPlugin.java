@@ -167,6 +167,11 @@ public class GeofencingPlugin extends CordovaPlugin {
   }
 
   public static void sendNotification(Bundle bundle) {
+    if(bundle==null) { 
+         Log.d(TAG, "sendNotification called but no id!" ) ;
+         return ;
+
+    }
     final String status = bundle.getString("status");
     final String id = bundle.getString("id");
     sendNotification(createRegionEvent(id, status));
