@@ -17,6 +17,7 @@
 
 #import <CoreLocation/CoreLocation.h>
 #import "GeofencingPlugin.h"
+#import <AudioToolbox/AudioServices.h>
 
 @implementation GeofencingPlugin
 
@@ -56,13 +57,14 @@
             
             if (![self.insideRegions containsObject:region]) {
                 [self.insideRegions addObject:region];
-                [self notify:region withStatus:@"entered Murrays Code"];
+                [self notify:region withStatus:@"entered Region"];
+                AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
             }
         } else {
             
             if ([self.insideRegions containsObject:region]) {
                 [self.insideRegions removeObject:region];
-                [self notify:region withStatus:@"leaving Murrays Code"];
+                [self notify:region withStatus:@"leaving Region"];
             }
         
         }
