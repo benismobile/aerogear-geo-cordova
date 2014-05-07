@@ -94,21 +94,28 @@
 
     CLLocationCoordinate2D coordinate2D = CLLocationCoordinate2DMake([latitude doubleValue], [longitude doubleValue]);
     CLRegion * region = [[CLRegion alloc] initCircularRegionWithCenter:coordinate2D radius:radius identifier:[NSString stringWithFormat:@"cordovaGeofencing:%@", regionId]];
-    
     [self.monitoringRegions addObject:region];
-    [self.locationManager startMonitoringForRegion:region desiredAccuracy:kCLLocationAccuracyBest];
     [self returnStatusOk:command];
 }
 
 - (void)removeRegion:(CDVInvokedUrlCommand *)command {
     NSString *regionId = [[self parseParameters:command] objectForKey:@"fid"];
 
-    for (CLRegion *region in [locationManager monitoredRegions]) {
+    BOOL removed = NO;
+    for (CLRegion *region in [self monitoringRegions]){
         if ([region.identifier hasSuffix:regionId]) {
-            [locationManager stopMonitoringForRegion:region ];
+            [monitoringRegions removeObject:region];
+            removed = YES;
         }
     }
-
+    
+    NSLog(@"GeoFence Region Removed %@", removed ? @"Yes" : @"No");
+    
+    for (CLRegion *region in [self insideRegions]){
+        if ([region.identifier hasSuffix:regionId]) {
+            [insideRegions removeObject:region];
+        }
+    }
     [self returnStatusOk:command];
 }
 
