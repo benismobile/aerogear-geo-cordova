@@ -80,5 +80,7 @@
 
     <source-file src="src/ios/GeofencingPlugin.m"/>
     <header-file src="src/ios/GeofencingPlugin.h"/>
+    
+    <framework src="AudioToolbox.framework" />
   </platform>
 </plugin>
