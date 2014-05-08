@@ -77,7 +77,9 @@
         <param name="ios-package" value="GeofencingPlugin" />
       </feature>
     </config-file>
-
+        
+        
+    <resource-file src="src/ios/Beep.aif" />
     <source-file src="src/ios/GeofencingPlugin.m"/>
     <header-file src="src/ios/GeofencingPlugin.h"/>
     
