@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+ #define systemSoundID    1003
+
 #import <CoreLocation/CoreLocation.h>
 #import "GeofencingPlugin.h"
 #import <AudioToolbox/AudioServices.h>
@@ -41,6 +43,16 @@
 
     self.monitoringRegions = [[NSMutableSet alloc]init];
     self.insideRegions = [[NSMutableSet alloc] init];
+    
+    //setup sound effect
+    NSURL *fileURL = [[NSBundle mainBundle] URLForResource:@"Beep" withExtension:@"aiff"];
+    if (fileURL != nil)
+    {
+        SystemSoundID theSoundID;
+        OSStatus error = AudioServicesCreateSystemSoundID((__bridge CFURLRef)fileURL, &theSoundID);
+        if (error == kAudioServicesNoError)
+            soundId = theSoundID;
+    }
     return self;
 }
 
@@ -59,6 +71,8 @@
                 [self.insideRegions addObject:region];
                 [self notify:region withStatus:@"entered Region"];
                 AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
+                
+                [self playSoundAlert];
             }
         } else {
             
@@ -257,6 +271,14 @@
     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:posError];
 
     [self.commandDelegate sendPluginResult:result callbackId:callbackId];
+}
+
+-(void)playSoundAlert{
+    
+    AudioServicesPlaySystemSound(soundId);
+}
+-(void) dealloc {
+    AudioServicesDisposeSystemSoundID(soundId);
 }
 
 - (id)parseParameters:(CDVInvokedUrlCommand*)command {

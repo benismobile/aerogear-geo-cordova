@@ -17,7 +17,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Cordova/CDVPlugin.h>
-
+#import <AudioToolbox/AudioServices.h>
 enum CDVLocationStatus {
     PERMISSIONDENIED = 1,
     GEOFENCINGPERMISSIONDENIED = 2
@@ -25,7 +25,7 @@ enum CDVLocationStatus {
 
 @interface GeofencingPlugin : CDVPlugin<CLLocationManagerDelegate>
 {
-
+    SystemSoundID soundId;
 }
 @property (nonatomic, strong) CLLocationManager* locationManager;
 @property (nonatomic, copy) NSString *callbackId;
@@ -37,5 +37,5 @@ enum CDVLocationStatus {
 - (void)addRegion:(CDVInvokedUrlCommand *)command;
 - (void)removeRegion:(CDVInvokedUrlCommand *)command;
 - (void)getWatchedRegionIds:(CDVInvokedUrlCommand *)command;
-
+- (void)playSoundAlert;
 @end
