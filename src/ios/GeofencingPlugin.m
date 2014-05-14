@@ -45,7 +45,7 @@
     self.insideRegions = [[NSMutableSet alloc] init];
     
     //setup sound effect
-    NSURL *fileURL = [[NSBundle mainBundle] URLForResource:@"Beep" withExtension:@"aiff"];
+    NSURL *fileURL = [[NSBundle mainBundle] URLForResource:@"Beep" withExtension:@"aif"];
     if (fileURL != nil)
     {
         SystemSoundID theSoundID;
@@ -64,11 +64,14 @@
     CLLocation *aUserLocation = newLocation;
 
     //TODO Place in synchronized block
+    
     for (CLRegion *region in  self.monitoringRegions) {
         if([region containsCoordinate:aUserLocation.coordinate]){
             
             if (![self.insideRegions containsObject:region]) {
-                [self.insideRegions addObject:region];
+                @synchronized(self.insideRegions){
+                    [self.insideRegions addObject:region];
+                }
                 [self notify:region withStatus:@"entered Region"];
                 AudioServicesPlayAlertSound(kSystemSoundID_Vibrate);
                 
@@ -77,7 +80,9 @@
         } else {
             
             if ([self.insideRegions containsObject:region]) {
-                [self.insideRegions removeObject:region];
+                @synchronized(self.insideRegions){
+                    [self.insideRegions removeObject:region];
+                }
                 [self notify:region withStatus:@"leaving Region"];
             }
         
@@ -110,7 +115,9 @@
 
     CLLocationCoordinate2D coordinate2D = CLLocationCoordinate2DMake([latitude doubleValue], [longitude doubleValue]);
     CLRegion * region = [[CLRegion alloc] initCircularRegionWithCenter:coordinate2D radius:radius identifier:[NSString stringWithFormat:@"cordovaGeofencing:%@", regionId]];
-    [self.monitoringRegions addObject:region];
+    @synchronized(self.monitoringRegions){
+        [self.monitoringRegions addObject:region];
+    }
     [self returnStatusOk:command];
 }
 
@@ -118,19 +125,34 @@
     NSString *regionId = [[self parseParameters:command] objectForKey:@"fid"];
 
     BOOL removed = NO;
+    NSObject *removeFromMonitoringRegion = nil;
     for (CLRegion *region in [self monitoringRegions]){
         if ([region.identifier hasSuffix:regionId]) {
-            [monitoringRegions removeObject:region];
+            removeFromMonitoringRegion = region;
+
             removed = YES;
         }
     }
+    @synchronized(self.monitoringRegions){
+        if (removeFromMonitoringRegion) {
+            [monitoringRegions removeObject:removeFromMonitoringRegion];
+        }
+        
+    }
     
     NSLog(@"GeoFence Region Removed %@", removed ? @"Yes" : @"No");
-    
+    NSObject *removeFromInsideRegions = nil;
     for (CLRegion *region in [self insideRegions]){
         if ([region.identifier hasSuffix:regionId]) {
-            [insideRegions removeObject:region];
+            removeFromInsideRegions = region;
         }
+    }
+    
+    @synchronized(self.insideRegions){
+        if (removeFromInsideRegions) {
+            [insideRegions removeObject:removeFromInsideRegions];
+        }
+        
     }
     [self returnStatusOk:command];
 }
