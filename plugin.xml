@@ -78,7 +78,13 @@
       </feature>
     </config-file>
         
-        
+       <!--this need to be added to the .plist file-->
+    <config-file target="*-Info.plist" parent="UIBackgroundModes">
+        <array>
+            <string>location</string>
+        </array>
+    </config-file>
+    
     <resource-file src="src/ios/Beep.aif" />
     <source-file src="src/ios/GeofencingPlugin.m"/>
     <header-file src="src/ios/GeofencingPlugin.h"/>
